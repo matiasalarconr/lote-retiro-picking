@@ -588,14 +588,22 @@ function leerLocal() {
 function guardarLocal() {
   try { localStorage.setItem(CLAVE, JSON.stringify(Object.fromEntries(Object.entries(TOMAS).filter(([, t]) => !t.ejemplo)))); } catch {}
 }
-let TOMAS = leerLocal();
-if (!Object.keys(TOMAS).length) TOMAS = tomaEjemplo();
+// La toma de ejemplo se muestra mientras no haya cargas, hasta que alguien la elimina (queda eliminada para todos).
+let SIN_EJEMPLO = false;
+try { SIN_EJEMPLO = localStorage.getItem(CLAVE + "-sin-ejemplo") === "1"; } catch {}
+const conEjemplo = m => Object.keys(m).length || SIN_EJEMPLO ? m : tomaEjemplo();
+let TOMAS = conEjemplo(leerLocal());
 
 async function guardarTomas(nuevas) {
   if (!DB) return guardarLocal();
   for (const [f, t] of Object.entries(nuevas)) await DB.collection("tomas").doc(idDoc(f)).set({ ...t, fecha: f });
 }
-async function borrarTomas(fechas) {
+async function borrarTomas(fechas, ejemplo) {
+  if (ejemplo) {
+    SIN_EJEMPLO = true;
+    try { localStorage.setItem(CLAVE + "-sin-ejemplo", "1"); } catch {}
+    if (DB) await DB.doc("ajustes/ejemplo").set({ oculto: true });
+  }
   if (!DB) return guardarLocal();
   for (const f of fechas) await DB.collection("tomas").doc(idDoc(f)).delete();
 }
@@ -622,10 +630,18 @@ async function conectar() {
   db.collection("tomas").onSnapshot(snap => {
     const m = {};
     snap.docs.forEach(d => { const t = d.data(); if (t && Array.isArray(t.rows)) m[t.fecha ?? ""] = t; });
-    TOMAS = Object.keys(m).length ? m : tomaEjemplo();
+    TOMAS = conEjemplo(m);
     render();
   }, () => {
     $("src").innerHTML = `<span class="err">Se perdió la conexión con el historial compartido. Recarga la página.</span>`;
+  });
+  db.doc("ajustes/ejemplo").onSnapshot(s => {
+    const oculto = !!s.data()?.oculto;
+    if (oculto === SIN_EJEMPLO) return;
+    SIN_EJEMPLO = oculto;
+    const reales = Object.fromEntries(Object.entries(TOMAS).filter(([, t]) => !t.ejemplo));
+    TOMAS = conEjemplo(reales);
+    render();
   });
 }
 
@@ -689,12 +705,12 @@ const fmtCarga = iso => {
 function renderHistorial() {
   const fechas = fechasCargadas().slice().reverse();
   const reales = fechas.filter(f => !TOMAS[f].ejemplo);
-  $("n-hist").textContent = reales.length ? `${reales.length} ${reales.length === 1 ? "carga" : "cargas"}` : "Sin cargas propias";
-  $("hbody").innerHTML = fechas.map(f => {
+  $("n-hist").textContent = reales.length ? `${reales.length} ${reales.length === 1 ? "carga" : "cargas"}` : "Sin cargas";
+  $("hbody").innerHTML = !fechas.length ? `<tr><td colspan="8" class="empty">No hay tomas cargadas. Usa “Subir Excel” para agregar la primera.</td></tr>` : fechas.map(f => {
     const t = TOMAS[f], ps = cruzar(t.rows.map(r => fila(r, f)));
     const a = ps.reduce((s, p) => s + p.uFQ, 0), b = ps.reduce((s, p) => s + p.uFS, 0);
     const acciones = confirmar === f
-      ? `<span class="confirm">¿Eliminar la toma ${esc(f)}? <button type="button" class="btn danger" data-borrar="${esc(f)}">Sí, eliminar</button> <button type="button" class="btn" data-cancelar>Cancelar</button></span>`
+      ? `<span class="confirm">¿Eliminar la toma ${esc(f)}${DB ? " para todos" : ""}? <button type="button" class="btn danger" data-borrar="${esc(f)}">Sí, eliminar</button> <button type="button" class="btn" data-cancelar>Cancelar</button></span>`
       : `<button type="button" class="btn sm" data-ver="${esc(f)}">Ver</button> <button type="button" class="btn sm danger-ghost" data-pedir="${esc(f)}">Eliminar</button>`;
     return `<tr class="${confirmar === f ? "pend" : ""}">
       <td class="num retiro">${esc(f || "Sin fecha")}</td>
@@ -709,8 +725,8 @@ function renderHistorial() {
   }).join("");
   const locales = DB && PUEDE ? Object.keys(leerLocal()).filter(f => !TOMAS[f] || TOMAS[f].ejemplo) : [];
   $("hfoot").innerHTML = (locales.length ? `<button type="button" class="btn" data-subir-locales>Subir ${locales.length} ${locales.length === 1 ? "toma guardada" : "tomas guardadas"} en este navegador al historial compartido</button>` : "") +
-    (!reales.length || !PUEDE ? "" : confirmar === "*"
-      ? `<span class="confirm">¿Eliminar las ${reales.length} cargas del historial? <button type="button" class="btn danger" data-borrar="*">Sí, eliminar todo</button> <button type="button" class="btn" data-cancelar>Cancelar</button></span>`
+    (!fechas.length || !PUEDE ? "" : confirmar === "*"
+      ? `<span class="confirm">¿Eliminar las ${fechas.length} tomas del historial para todos? <button type="button" class="btn danger" data-borrar="*">Sí, eliminar todo</button> <button type="button" class="btn" data-cancelar>Cancelar</button></span>`
       : `<button type="button" class="btn danger-ghost" data-pedir="*">Eliminar todo el historial</button>`);
   $("ver-hist").textContent = `Ver historial (${fechas.length})`;
   // Quién cargó: se guarda el id y el nombre se resuelve al mostrar
@@ -732,14 +748,17 @@ $("historial").addEventListener("click", e => {
   }
   if (b.dataset.borrar !== undefined) {
     const k = b.dataset.borrar;
-    const fechas = k === "*" ? Object.keys(TOMAS).filter(f => !TOMAS[f].ejemplo) : [k];
+    const todas = k === "*" ? Object.keys(TOMAS) : [k];
+    const ejemplo = todas.some(f => TOMAS[f]?.ejemplo);
+    const fechas = todas.filter(f => !TOMAS[f]?.ejemplo);
+    if (ejemplo) SIN_EJEMPLO = true;
     TOMAS = { ...TOMAS };
-    fechas.forEach(f => delete TOMAS[f]);
-    if (!Object.keys(TOMAS).length) TOMAS = tomaEjemplo();
+    todas.forEach(f => delete TOMAS[f]);
+    TOMAS = conEjemplo(TOMAS);
     confirmar = null;
     F.preset = "todas";
     render();
-    borrarTomas(fechas)
+    borrarTomas(fechas, ejemplo)
       .then(() => { $("src").textContent = k === "*" ? "Historial eliminado." : `Toma ${k} eliminada del historial.`; })
       .catch(e => { $("src").innerHTML = errGuardar(e); });
   }
@@ -818,7 +837,7 @@ function render() {
     ? `Filtros activos: ` + act.map(([k, t]) => `<span class="fchip">${esc(t)}<button type="button" data-x="${k}" aria-label="Quitar filtro">×</button></span>`).join("")
     : `Sin filtros activos: se muestran todas las tomas y productos.`;
   $("n-res").textContent = `${products.length} productos · ${enRango.length} ${enRango.length === 1 ? "toma" : "tomas"}`;
-  $("sub").textContent = ["Toma de inventario físico",
+  $("sub").textContent = !fechas.length ? "Sin tomas cargadas: sube un Excel para empezar." : ["Toma de inventario físico",
     enRango.length === 1 ? enRango[0] : `${F.desde} a ${F.hasta} (${enRango.length} tomas)`,
     enRango.length === 1 ? TOMAS[enRango[0]].resp : ""].filter(Boolean).join(" · ");
 
@@ -877,7 +896,7 @@ function render() {
       <td class="num">${p.uFQ ? fmt(p.uFQ) : `<span class="dash">—</span>`}</td>
       <td class="num">${p.uFS ? fmt(p.uFS) : `<span class="dash">—</span>`}</td>
       <td class="num">${p.uD ? fmt(p.uD) : `<span class="dash">—</span>`}</td>
-    </tr>`).join("") : `<tr><td colspan="10" class="empty">Ningún producto coincide con los filtros.</td></tr>`;
+    </tr>`).join("") : `<tr><td colspan="10" class="empty">${fechas.length ? "Ningún producto coincide con los filtros." : "No hay tomas cargadas. Usa “Subir Excel” para agregar la primera."}</td></tr>`;
   $("n-tabla").textContent = `${filas.length} filas`;
 
   // Datos a revisar

@@ -2,14 +2,16 @@
 
 Panel Castaño que cruza el lote retiro (FEFO) contra los lotes encontrados en picking. Es un solo `index.html`, sin build.
 
-- **Fuera (rojo):** lote en picking **menor o igual** al lote retiro.
-- **Dentro (verde):** lote en picking **mayor** al lote retiro.
+- **Lote en FEFO:** lote en picking **menor o igual** al lote retiro. Se divide en:
+  - **Sacado (café):** lo que aparece en las columnas **Lote sacado** y **Ctd** (se sacó del CD). Lote sacado sin Ctd = salió el lote completo.
+  - **Se quedó (rojo):** el resto. Si Lote sacado está vacío, todo el lote en FEFO se quedó.
+- **Lote en vida útil (verde):** lote en picking **mayor** al lote retiro.
 
-Las celdas con varios lotes (`426/432`) se separan y cada lote toma la cantidad en la misma posición (`657/576`).
+Las celdas con varios lotes (`426/432`) se separan y cada lote toma la cantidad en la misma posición (`657/576`). Lo mismo para Lote sacado / Ctd.
 
 ## Uso
 
-1. **Subir Excel:** el formato "Toma de Inventario Físico por Zonas". El panel busca la fila de encabezados con SKU, Descripción, Lote FEFO, Lote en Picking y Cant, y toma la fecha de la celda junto a **FECHA REALIZADO** (fila 2).
+1. **Subir Excel:** el formato "Toma de Inventario Físico por Zonas". El panel busca la fila de encabezados con SKU, Descripción, Lote FEFO, Lote en Picking, Cant, Lote sacado y Ctd, y toma la fecha de la celda junto a **FECHA REALIZADO** (fila 2).
 2. **Filtros:** periodo (todas, última toma, últimos 7 días, mes actual), rango de fechas, estado y búsqueda por SKU o producto.
 3. **Historial de cargas:** cada Excel queda como una toma por fecha; subir la misma fecha la reemplaza. Se puede ver o eliminar cada toma.
 

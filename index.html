@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lote Retiro vs Picking</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Panel Castaño: cruce del lote de retiro (FEFO) contra los lotes en picking, qué está dentro y qué está fuera.">
+<meta name="description" content="Panel Castaño: cruce del lote de retiro (FEFO) contra los lotes en picking, qué está en lote FEFO (sacado o que se quedó) y qué está en vida útil.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
@@ -33,6 +33,9 @@
   --good: #2e7d32;
   --good-text: #256a29;
   --good-soft: #dcecd7;
+  --done: #8d6e58;
+  --done-text: #6f5442;
+  --done-soft: #ece1d6;
   --warn: #c98a00;
   --warn-soft: #f6e8c4;
   --shadow: 0 1px 2px rgba(58,36,23,.06), 0 4px 14px rgba(58,36,23,.06);
@@ -48,6 +51,7 @@
     --accent: #e39a4a; --accent-ink: #1a0f06; --accent-soft: #3d2814;
     --bad: #e06b5c; --bad-text: #f08a7c; --bad-soft: #3d1d18;
     --good: #5fae5f; --good-text: #7cc47c; --good-soft: #1d3320;
+    --done: #a88d78; --done-text: #c9b09b; --done-soft: #33261c;
     --warn: #e0b040; --warn-soft: #3a2e12;
     --shadow: 0 1px 2px rgba(0,0,0,.3);
   }
@@ -60,6 +64,7 @@
   --accent: #e39a4a; --accent-ink: #1a0f06; --accent-soft: #3d2814;
   --bad: #e06b5c; --bad-text: #f08a7c; --bad-soft: #3d1d18;
   --good: #5fae5f; --good-text: #7cc47c; --good-soft: #1d3320;
+  --done: #a88d78; --done-text: #c9b09b; --done-soft: #33261c;
   --warn: #e0b040; --warn-soft: #3a2e12;
   --shadow: 0 1px 2px rgba(0,0,0,.3);
 }
@@ -185,7 +190,8 @@ tr.pend td { background: var(--bad-soft); }
 .kpi.bad { border-top: 3px solid var(--bad); }
 .kpi.good { border-top: 3px solid var(--good); }
 .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
-.d-bad { background: var(--bad); } .d-good { background: var(--good); }
+.d-bad { background: var(--bad); } .d-good { background: var(--good); } .d-done { background: var(--done); }
+.kpi.done .v { color: var(--done-text); } .kpi.done { border-top: 3px solid var(--done); }
 
 .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 .card h2 { font: 700 19px/1.2 var(--f-display); margin: 0; text-wrap: balance; }
@@ -196,8 +202,9 @@ tr.pend td { background: var(--bad-soft); }
 
 .split { display: flex; height: 30px; border-radius: 8px; overflow: hidden; gap: 2px; background: var(--surface-2); }
 .split div { display: flex; align-items: center; padding: 0 10px; color: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 0; overflow: hidden; }
-.split .f { background: var(--bad); } .split .d { background: var(--good); }
-.split-lab { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); gap: 12px; }
+.split .f { background: var(--bad); } .split .s { background: var(--done); } .split .d { background: var(--good); }
+.split-lab .k { display: inline-flex; align-items: center; gap: 6px; }
+.split-lab { display: flex; flex-wrap: wrap; justify-content: space-between; font-size: 13px; color: var(--ink-2); gap: 12px; }
 
 svg { display: block; width: 100%; height: auto; }
 svg text { font-family: var(--f-body); }
@@ -231,13 +238,17 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
 td.retiro { font-weight: 700; }
 tr.f td:first-child { box-shadow: inset 4px 0 0 var(--bad); }
 tr.d td:first-child { box-shadow: inset 4px 0 0 var(--good); }
+tr.s td:first-child { box-shadow: inset 4px 0 0 var(--done); }
 tr.w td:first-child { box-shadow: inset 4px 0 0 var(--warn); }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { display: inline-flex; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chip.f { background: var(--bad-soft); } .chip.d { background: var(--good-soft); } .chip.w { background: var(--warn-soft); }
+.chip.s { background: var(--done-soft); }
+.chip .sac { color: var(--done-text); font-weight: 700; }
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
 .badge.f { background: var(--bad-soft); color: var(--bad-text); }
 .badge.d { background: var(--good-soft); color: var(--good-text); }
+.badge.s { background: var(--done-soft); color: var(--done-text); }
 .badge.w { background: var(--warn-soft); color: var(--ink); }
 .dash { color: var(--muted); }
 .rev { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
@@ -273,7 +284,7 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
         <span><b>Resumen</b><small>Filtros e indicadores</small></span></a>
       <a href="#graficos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-        <span><b>Gráficos</b><small>Fuera y dentro</small></span></a>
+        <span><b>Gráficos</b><small>FEFO y vida útil</small></span></a>
       <a href="#cruce">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         <span><b>Cruce por producto</b><small>Lote retiro vs picking</small></span></a>
@@ -286,8 +297,10 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
     </nav>
     <div class="side-foot">
       Regla del cruce
-      <div class="k"><span class="dot d-bad"></span>Fuera: lote ≤ lote retiro</div>
-      <div class="k"><span class="dot d-good"></span>Dentro: lote &gt; lote retiro</div>
+      <div class="k"><span class="dot d-bad"></span>Lote en FEFO que se quedó</div>
+      <div class="k"><span class="dot d-done"></span>Lote en FEFO sacado del CD</div>
+      <div class="k"><span class="dot d-good"></span>Lote en vida útil</div>
+      <div style="margin-top:6px">Lote en FEFO: lote ≤ lote retiro. Vida útil: lote &gt; lote retiro. Sacado sale de las columnas Lote sacado y Ctd.</div>
     </div>
   </aside>
 
@@ -315,8 +328,9 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
           <div class="fg"><label for="f-estado">Estado</label>
             <select id="f-estado">
               <option value="">Todos</option>
-              <option value="f">Con lote fuera</option>
-              <option value="d">Todo dentro</option>
+              <option value="f">FEFO que se quedó</option>
+              <option value="s">FEFO sacado</option>
+              <option value="d">Solo vida útil</option>
               <option value="w">A revisar</option>
             </select>
           </div>
@@ -338,7 +352,7 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
     <section class="kpis" id="kpis" aria-label="Indicadores"></section>
 
     <section class="panel card" id="graficos">
-      <div class="ph"><span>Unidades dentro y fuera</span><span class="legend"><span><span class="dot d-bad"></span>Fuera</span><span><span class="dot d-good"></span>Dentro</span></span></div>
+      <div class="ph"><span>Unidades por categoría</span><span class="legend"><span><span class="dot d-bad"></span>FEFO se quedó</span><span><span class="dot d-done"></span>FEFO sacado</span><span><span class="dot d-good"></span>Vida útil</span></span></div>
       <div class="pb">
         <div class="split" id="split"></div>
         <div class="split-lab" id="split-lab"></div>
@@ -347,16 +361,16 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
 
     <div class="grid2">
       <section class="panel card">
-        <div class="ph"><span>Productos con lote fuera</span></div>
+        <div class="ph"><span>Productos con lote en FEFO</span></div>
         <div class="pb">
-          <p class="desc">Unidades fuera (rojo) y dentro (verde) de cada producto con algún lote menor o igual al lote retiro.</p>
+          <p class="desc">Por producto: lote en FEFO que se quedó (rojo), lote en FEFO sacado (café) y lote en vida útil (verde).</p>
           <div id="c-fuera"></div>
         </div>
       </section>
       <section class="panel card">
         <div class="ph"><span>Evolución por toma</span></div>
         <div class="pb">
-          <p class="desc">Unidades fuera y dentro en cada fecha de toma del periodo.</p>
+          <p class="desc">Unidades por categoría en cada fecha de toma del periodo.</p>
           <div id="c-tomas"></div>
         </div>
       </section>
@@ -367,7 +381,7 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
       <div class="pb">
         <div class="tbl">
           <table>
-            <thead><tr><th>Estado</th><th class="num">Fecha</th><th>SKU</th><th>Producto</th><th class="num">Lote retiro</th><th>Lotes fuera</th><th>Lotes dentro</th><th class="num">Unid. fuera</th><th class="num">Unid. dentro</th></tr></thead>
+            <thead><tr><th>Estado</th><th class="num">Fecha</th><th>SKU</th><th>Producto</th><th class="num">Lote retiro</th><th>Lotes en FEFO</th><th>Lotes en vida útil</th><th class="num">FEFO se quedó</th><th class="num">FEFO sacado</th><th class="num">Vida útil</th></tr></thead>
             <tbody id="tbody"></tbody>
           </table>
         </div>
@@ -380,7 +394,7 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
         <p class="desc">Cada Excel subido queda como una toma por su fecha. Subir otra vez la misma fecha reemplaza esa toma. <b id="modo">El historial se guarda solo en este navegador.</b></p>
         <div class="tbl">
           <table>
-            <thead><tr><th class="num">Fecha toma</th><th>Archivo</th><th>Responsable</th><th class="num">Productos</th><th class="num">Unid. fuera</th><th class="num">% fuera</th><th>Cargado</th><th class="num">Acciones</th></tr></thead>
+            <thead><tr><th class="num">Fecha toma</th><th>Archivo</th><th>Responsable</th><th class="num">Productos</th><th class="num">FEFO se quedó</th><th class="num">FEFO sacado</th><th>Cargado</th><th class="num">Acciones</th></tr></thead>
             <tbody id="hbody"></tbody>
           </table>
         </div>
@@ -398,9 +412,9 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// Toma de ejemplo: [SKU, producto, lote retiro (FEFO), lote en picking, cantidad] tal como vienen en la planilla
+// Toma de ejemplo: [SKU, producto, lote retiro (FEFO), lote en picking, cantidad, lote sacado, ctd sacada] tal como vienen en la planilla
 const RAW = [
-  ["100036","MUFFIN ARANDANO P2","427","426/432","657/576"],
+  ["100036","MUFFIN ARANDANO P2","427","426/432","657/576","426","657"],
   ["100037","MUFFIN CHOCOLATE NEGRO P2","427","432","80"],
   ["100038","MUFFIN CHIPS CHOCOLATE P2","427","426/432","872/756"],
   ["100176","PREPIZZA CAS RETTANGOLO 500G","422","425/433","420/960"],
@@ -468,27 +482,50 @@ const $ = id => document.getElementById(id);
 
 // ---------- Cruce ----------
 // "426/432" + "657/576" -> lote 426 con 657 u. y lote 432 con 576 u.
-// Fuera: lote en picking menor o igual al lote retiro. Dentro: mayor.
-const cruzar = rows => rows.map(([sku, desc, retiroS, loteS, cantS, fecha]) => {
+// Lote en FEFO (k "f"): lote en picking menor o igual al lote retiro. Lote en vida útil (k "d"): mayor.
+// Cada lote en FEFO se divide en sacado (columnas Lote sacado / Ctd) y lo que se quedó en el CD.
+// Sin Lote sacado, todo el lote en FEFO se quedó; Lote sacado sin Ctd significa que salió el lote completo.
+const partir = s => String(s ?? "").split("/").map(x => x.trim()).filter(Boolean);
+const fila = (r, fecha) => [r[0], r[1], r[2], r[3], r[4], r[5] || "", r[6] || "", fecha];
+const cruzar = rows => rows.map(([sku, desc, retiroS, loteS, cantS, sacS, ctdS, fecha]) => {
   const retiro = parseInt(retiroS, 10);
-  const lotes = loteS.split("/").map(s => s.trim()).filter(Boolean);
-  const cants = cantS.split("/").map(s => s.trim()).filter(Boolean);
+  const lotes = partir(loteS), cants = partir(cantS);
   const issues = [];
   if (!lotes.length) issues.push("sin lote registrado");
   else if (!cants.length) issues.push("sin cantidad registrada");
   else if (cants.length !== lotes.length) issues.push("lotes y cantidades no calzan");
+
+  // Lotes sacados: lote -> cantidad (null = lote completo)
+  const sacL = partir(sacS), sacQ = partir(ctdS), sacados = new Map();
+  if (sacQ.length && sacQ.length !== sacL.length) issues.push("lotes sacados y cantidades sacadas no calzan");
+  sacL.forEach((l, i) => {
+    if (!/^\d+$/.test(l)) { issues.push(`lote sacado “${l}” no es número`); return; }
+    const q = sacQ.length === sacL.length && /^\d+$/.test(sacQ[i]) ? parseInt(sacQ[i], 10) : null;
+    sacados.set(l, q == null || !sacados.has(l) ? q : (sacados.get(l) ?? 0) + q);
+  });
 
   const lots = lotes.map((l, i) => {
     const qty = cants.length === lotes.length ? parseInt(cants[i], 10) : null;
     if (!/^\d+$/.test(l)) { issues.push(`lote “${l}” no es número`); return { raw: l, qty, k: "w" }; }
     const lote = parseInt(l, 10);
     if (Math.abs(lote - retiro) > MAX_GAP) { issues.push(`lote ${l} parece mal digitado`); return { raw: l, qty, k: "w" }; }
-    return { raw: l, lote, qty, k: lote > retiro ? "d" : "f" };
+    if (lote > retiro) return { raw: l, lote, qty, k: "d" };
+    let sac = 0;
+    if (sacados.has(l)) {
+      const q = sacados.get(l);
+      sac = q == null ? (qty || 0) : q;
+      if (qty != null && sac > qty) { issues.push(`se sacaron ${fmt(sac)} u. del lote ${l} pero se contaron ${fmt(qty)}`); sac = qty; }
+      sacados.delete(l);
+    }
+    return { raw: l, lote, qty, k: "f", sac, quedo: qty == null ? null : qty - sac };
   });
-  const sum = k => lots.filter(l => l.k === k).reduce((a, l) => a + (l.qty || 0), 0);
+  sacados.forEach((q, l) => issues.push(`lote sacado ${l} no es un lote en FEFO de esta fila`));
+  const sumD = lots.filter(l => l.k === "d").reduce((a, l) => a + (l.qty || 0), 0);
   const fuera = lots.filter(l => l.k === "f"), dentro = lots.filter(l => l.k === "d");
-  const estado = fuera.length ? "f" : dentro.length && !issues.length ? "d" : "w";
-  return { fecha, sku, desc, retiro, loteS, cantS, lots, fuera, dentro, issues, estado, uF: sum("f"), uD: sum("d") };
+  const uFS = fuera.reduce((a, l) => a + l.sac, 0), uFQ = fuera.reduce((a, l) => a + (l.quedo || 0), 0);
+  // f: algo en FEFO se quedó · s: todo lo que estaba en FEFO se sacó · d: solo vida útil · w: revisar
+  const estado = fuera.length ? (uFQ > 0 || fuera.some(l => l.quedo == null) ? "f" : "s") : dentro.length && !issues.length ? "d" : "w";
+  return { fecha, sku, desc, retiro, loteS, cantS, sacS, ctdS, lots, fuera, dentro, issues, estado, uF: uFQ + uFS, uFQ, uFS, uD: sumD };
 });
 
 // ---------- Fechas ----------
@@ -517,8 +554,11 @@ function leerHoja(ws) {
   const col = re => h.findIndex(c => re.test(c));
   const c = {
     sku: col(/^(sku|codigo|cod|material)/), desc: col(/descrip|producto|nombre/),
-    fefo: col(/lote.*(fefo|retiro)/), pick: col(/picking/), cant: col(/^cant/)
+    fefo: col(/lote.*(fefo|retiro)/), pick: col(/picking/), cant: col(/^cant/), sac: col(/sacad/)
   };
+  // Cantidad sacada: columna "Ctd" (o "Cant. sacada"), normalmente justo después de "Lote sacado"
+  c.ctd = h.findIndex((x, i) => i !== c.sac && i !== c.cant && /^ctd|(cant|ctd).*sacad/.test(x));
+  if (c.ctd < 0 && c.sac >= 0 && /^(ctd|cant)/.test(h[c.sac + 1] || "")) c.ctd = c.sac + 1;
   if (c.sku < 0 || c.fefo < 0 || c.pick < 0) return null;
   const meta = {};
   grid.slice(0, hi).forEach(r => r.forEach((v, i) => {
@@ -530,7 +570,8 @@ function leerHoja(ws) {
   const rows = grid.slice(hi + 1)
     .filter(r => /^\d+$/.test(String(r[c.sku]).trim()) && String(r[c.fefo]).trim())
     .map(r => [String(r[c.sku]).trim(), c.desc < 0 ? "" : String(r[c.desc]).trim(),
-      String(r[c.fefo]).trim(), String(r[c.pick]).trim(), c.cant < 0 ? "" : String(r[c.cant]).trim()]);
+      String(r[c.fefo]).trim(), String(r[c.pick]).trim(), c.cant < 0 ? "" : String(r[c.cant]).trim(),
+      c.sac < 0 ? "" : String(r[c.sac]).trim(), c.ctd < 0 ? "" : String(r[c.ctd]).trim()]);
   return { rows, meta };
 }
 
@@ -650,8 +691,8 @@ function renderHistorial() {
   const reales = fechas.filter(f => !TOMAS[f].ejemplo);
   $("n-hist").textContent = reales.length ? `${reales.length} ${reales.length === 1 ? "carga" : "cargas"}` : "Sin cargas propias";
   $("hbody").innerHTML = fechas.map(f => {
-    const t = TOMAS[f], ps = cruzar(t.rows.map(r => [...r.slice(0, 5), f]));
-    const a = ps.reduce((s, p) => s + p.uF, 0), b = ps.reduce((s, p) => s + p.uD, 0);
+    const t = TOMAS[f], ps = cruzar(t.rows.map(r => fila(r, f)));
+    const a = ps.reduce((s, p) => s + p.uFQ, 0), b = ps.reduce((s, p) => s + p.uFS, 0);
     const acciones = confirmar === f
       ? `<span class="confirm">¿Eliminar la toma ${esc(f)}? <button type="button" class="btn danger" data-borrar="${esc(f)}">Sí, eliminar</button> <button type="button" class="btn" data-cancelar>Cancelar</button></span>`
       : `<button type="button" class="btn sm" data-ver="${esc(f)}">Ver</button> <button type="button" class="btn sm danger-ghost" data-pedir="${esc(f)}">Eliminar</button>`;
@@ -661,7 +702,7 @@ function renderHistorial() {
       <td>${esc(t.resp || "—")}</td>
       <td class="num">${ps.length}</td>
       <td class="num">${fmt(a)}</td>
-      <td class="num">${pct(a, a + b)}</td>
+      <td class="num">${fmt(b)}</td>
       <td>${t.ejemplo ? "—" : fmtCarga(t.cargado)}${t.cargadoPor ? `<br><span class="quien" data-uid="${esc(t.cargadoPor)}"></span>` : ""}</td>
       <td class="num">${PUEDE ? acciones : `<button type="button" class="btn sm" data-ver="${esc(f)}">Ver</button>`}</td>
     </tr>`;
@@ -742,7 +783,7 @@ $("activos").addEventListener("click", e => {
 });
 
 // ---------- Render ----------
-const ESTADO = { f: "Con lote fuera", d: "Todo dentro", w: "A revisar" };
+const ESTADO = { f: "FEFO que se quedó", s: "FEFO sacado", d: "Solo vida útil", w: "A revisar" };
 let products = [];
 function render() {
   const fechas = fechasCargadas();
@@ -764,7 +805,7 @@ function render() {
   const dk = claveFecha(F.desde), hk = claveFecha(F.hasta);
   const enRango = fechas.filter(f => claveFecha(f) >= dk && claveFecha(f) <= hk);
   const q = norm(F.q);
-  const base = cruzar(enRango.flatMap(f => TOMAS[f].rows.map(r => [...r.slice(0, 5), f])))
+  const base = cruzar(enRango.flatMap(f => TOMAS[f].rows.map(r => fila(r, f))))
     .filter(p => !q || norm(p.sku + " " + p.desc).includes(q));
   products = base.filter(p => !F.estado || p.estado === F.estado);
 
@@ -782,40 +823,48 @@ function render() {
     enRango.length === 1 ? TOMAS[enRango[0]].resp : ""].filter(Boolean).join(" · ");
 
   // KPIs
-  const uF = products.reduce((a, p) => a + p.uF, 0), uD = products.reduce((a, p) => a + p.uD, 0);
-  const prodF = products.filter(p => p.estado === "f");
+  const sum = k => products.reduce((a, p) => a + p[k], 0);
+  const uFQ = sum("uFQ"), uFS = sum("uFS"), uD = sum("uD"), uF = uFQ + uFS, tot = uF + uD;
+  const prodQ = products.filter(p => p.estado === "f"), prodS = products.filter(p => p.estado === "s");
+  const prodFefo = products.filter(p => p.fuera.length);
   $("kpis").innerHTML = `
-    <div class="kpi bad"><div class="k"><span class="dot d-bad"></span>Unidades fuera</div><div class="v">${fmt(uF)}</div><div class="s">lote ≤ lote retiro</div></div>
-    <div class="kpi good"><div class="k"><span class="dot d-good"></span>Unidades dentro</div><div class="v">${fmt(uD)}</div><div class="s">lote &gt; lote retiro</div></div>
-    <div class="kpi ${uF ? "bad" : "good"}"><div class="k">% fuera</div><div class="v">${pct(uF, uF + uD)}</div><div class="s">de ${fmt(uF + uD)} u. contadas</div></div>
-    <div class="kpi ${prodF.length ? "bad" : "good"}"><div class="k">Productos con lote fuera</div><div class="v">${prodF.length} <span style="font-size:15px;color:var(--muted);font-weight:600">de ${products.length}</span></div><div class="s">${prodF.reduce((a, p) => a + p.fuera.length, 0)} lotes fuera</div></div>
-    <div class="kpi"><div class="k">Tomas en el periodo</div><div class="v">${enRango.length}</div><div class="s">${enRango.length === 1 ? enRango[0] : `${F.desde} a ${F.hasta}`}</div></div>`;
+    <div class="kpi bad"><div class="k"><span class="dot d-bad"></span>Lote en FEFO</div><div class="v">${fmt(uF)}</div><div class="s">${pct(uF, tot)} del total · lote ≤ lote retiro</div></div>
+    <div class="kpi bad"><div class="k"><span class="dot d-bad"></span>FEFO que se quedó</div><div class="v">${fmt(uFQ)}</div><div class="s">${pct(uFQ, uF)} del lote en FEFO · ${prodQ.length} productos</div></div>
+    <div class="kpi done"><div class="k"><span class="dot d-done"></span>FEFO sacado del CD</div><div class="v">${fmt(uFS)}</div><div class="s">${pct(uFS, uF)} del lote en FEFO · ${prodFefo.filter(p => p.uFS).length} productos</div></div>
+    <div class="kpi good"><div class="k"><span class="dot d-good"></span>Lote en vida útil</div><div class="v">${fmt(uD)}</div><div class="s">${pct(uD, tot)} del total · lote &gt; lote retiro</div></div>
+    <div class="kpi"><div class="k">Tomas en el periodo</div><div class="v">${enRango.length}</div><div class="s">${products.length} productos · ${fmt(tot)} u. contadas</div></div>`;
 
-  $("split").innerHTML = uF + uD
-    ? `<div class="f" style="flex:${uF}" title="Fuera">${uF ? pct(uF, uF + uD) : ""}</div><div class="d" style="flex:${uD}" title="Dentro">${uD ? pct(uD, uF + uD) : ""}</div>`
-    : "";
-  $("split-lab").innerHTML = `<span>Fuera: <b>${fmt(uF)} u.</b></span><span>Dentro: <b>${fmt(uD)} u.</b></span>`;
+  const seg = (c, v, t) => v ? `<div class="${c}" style="flex:${v}" title="${t}">${pct(v, tot)}</div>` : "";
+  $("split").innerHTML = tot ? seg("f", uFQ, "FEFO que se quedó") + seg("s", uFS, "FEFO sacado") + seg("d", uD, "Vida útil") : "";
+  $("split-lab").innerHTML = `<span class="k"><span class="dot d-bad"></span>FEFO se quedó: <b>${fmt(uFQ)} u.</b></span><span class="k"><span class="dot d-done"></span>FEFO sacado: <b>${fmt(uFS)} u.</b></span><span class="k"><span class="dot d-good"></span>Vida útil: <b>${fmt(uD)} u.</b></span>`;
 
   // Gráficos
   hideTip();
-  const prodRows = prodF.slice().sort((a, b) => b.uF - a.uF).map(p => ({
-    label: p.desc, f: p.uF, d: p.uD,
+  const segs = p => [{ v: p.uFQ, c: "var(--bad)" }, { v: p.uFS, c: "var(--done)" }, { v: p.uD, c: "var(--good)" }];
+  const prodRows = prodFefo.slice().sort((a, b) => b.uFQ - a.uFQ || b.uFS - a.uFS).map(p => ({
+    label: p.desc, segs: segs(p), nota: p.uFQ ? `${fmt(p.uFQ)} se quedó` : "todo sacado",
     title: `${p.sku} · ${p.desc}${enRango.length > 1 ? " · " + p.fecha : ""}`,
-    tip: [["Lote retiro", p.retiro], ...p.lots.filter(l => l.k !== "w").map(l => [`${l.k === "f" ? "Fuera" : "Dentro"} · lote ${l.lote}`, l.qty == null ? "s/c" : fmt(l.qty) + " u."])]
+    tip: [["Lote retiro", p.retiro], ...p.lots.filter(l => l.k !== "w").flatMap(l => l.k === "d"
+      ? [[`Vida útil · lote ${l.lote}`, l.qty == null ? "s/c" : fmt(l.qty) + " u."]]
+      : [[`FEFO · lote ${l.lote}`, l.qty == null ? "s/c" : fmt(l.qty) + " u."], ["  sacado / se quedó", `${fmt(l.sac)} / ${l.quedo == null ? "s/c" : fmt(l.quedo)}`]])]
   }));
   const tomaRows = enRango.map(f => {
     const ps = products.filter(p => p.fecha === f);
-    const a = ps.reduce((s, p) => s + p.uF, 0), b = ps.reduce((s, p) => s + p.uD, 0);
-    return { label: f, f: a, d: b, title: `Toma ${f}`, tip: [["Fuera", fmt(a) + " u."], ["Dentro", fmt(b) + " u."], ["% fuera", pct(a, a + b)], ["Productos", ps.length]] };
+    const t = { uFQ: ps.reduce((s, p) => s + p.uFQ, 0), uFS: ps.reduce((s, p) => s + p.uFS, 0), uD: ps.reduce((s, p) => s + p.uD, 0) };
+    return { label: f, segs: segs(t), nota: `${fmt(t.uFQ)} se quedó`, title: `Toma ${f}`,
+      tip: [["FEFO que se quedó", fmt(t.uFQ) + " u."], ["FEFO sacado", fmt(t.uFS) + " u."], ["Vida útil", fmt(t.uD) + " u."], ["Productos", ps.length]] };
   });
-  CHARTS = [["c-fuera", prodRows, "Ningún producto con lote fuera en este filtro."], ["c-tomas", tomaRows, "Sin tomas en este filtro."]];
+  CHARTS = [["c-fuera", prodRows, "Ningún producto con lote en FEFO en este filtro."], ["c-tomas", tomaRows, "Sin tomas en este filtro."]];
   CHARTS.forEach(([id, rows, vacio]) => barras($(id), rows, vacio));
 
   // Tabla
-  const orden = { f: 0, w: 1, d: 2 };
-  const filas = products.slice().sort((a, b) => orden[a.estado] - orden[b.estado] || b.uF - a.uF || porFecha(b.fecha, a.fecha));
-  const chip = l => `<span class="chip ${l.k}"><b>${esc(l.raw)}</b>${l.qty == null ? "" : " · " + fmt(l.qty) + " u."}</span>`;
-  const BADGE = { f: "● Fuera", d: "● Dentro", w: "▲ Revisar" };
+  const orden = { f: 0, s: 1, w: 2, d: 3 };
+  const filas = products.slice().sort((a, b) => orden[a.estado] - orden[b.estado] || b.uFQ - a.uFQ || b.uFS - a.uFS || porFecha(b.fecha, a.fecha));
+  const chip = l => {
+    const cls = l.k === "f" && l.qty != null && l.quedo === 0 ? "s" : l.k;
+    return `<span class="chip ${cls}"><b>${esc(l.raw)}</b>${l.qty == null ? "" : " · " + fmt(l.qty) + " u."}${l.sac ? ` · <span class="sac">sacado ${fmt(l.sac)}</span>` : ""}</span>`;
+  };
+  const BADGE = { f: "● FEFO se quedó", s: "● FEFO sacado", d: "● Vida útil", w: "▲ Revisar" };
   $("tbody").innerHTML = filas.length ? filas.map(p => `
     <tr class="${p.estado}">
       <td><span class="badge ${p.estado}">${BADGE[p.estado]}</span></td>
@@ -825,16 +874,17 @@ function render() {
       <td class="num retiro">${p.retiro}</td>
       <td><div class="chips">${p.fuera.map(chip).join("") || `<span class="dash">—</span>`}</div></td>
       <td><div class="chips">${p.dentro.map(chip).join("") || `<span class="dash">—</span>`}${p.lots.filter(l => l.k === "w").map(chip).join("")}</div></td>
-      <td class="num">${p.uF ? fmt(p.uF) : `<span class="dash">—</span>`}</td>
+      <td class="num">${p.uFQ ? fmt(p.uFQ) : `<span class="dash">—</span>`}</td>
+      <td class="num">${p.uFS ? fmt(p.uFS) : `<span class="dash">—</span>`}</td>
       <td class="num">${p.uD ? fmt(p.uD) : `<span class="dash">—</span>`}</td>
-    </tr>`).join("") : `<tr><td colspan="9" class="empty">Ningún producto coincide con los filtros.</td></tr>`;
+    </tr>`).join("") : `<tr><td colspan="10" class="empty">Ningún producto coincide con los filtros.</td></tr>`;
   $("n-tabla").textContent = `${filas.length} filas`;
 
   // Datos a revisar
   const rev = products.filter(p => p.issues.length);
   $("n-rev").textContent = `${rev.length} productos`;
   $("rev").innerHTML = rev.length ? rev.map(p =>
-    `<li><b>${esc(p.sku)}</b> ${esc(p.desc)}${enRango.length > 1 ? ` (${esc(p.fecha)})` : ""}: ${p.issues.map(esc).join(", ")}. Lote <code>${esc(p.loteS || "vacío")}</code>, cant. <code>${esc(p.cantS || "vacía")}</code></li>`).join("")
+    `<li><b>${esc(p.sku)}</b> ${esc(p.desc)}${enRango.length > 1 ? ` (${esc(p.fecha)})` : ""}: ${p.issues.map(esc).join(", ")}. Lote <code>${esc(p.loteS || "vacío")}</code>, cant. <code>${esc(p.cantS || "vacía")}</code>${p.sacS || p.ctdS ? `, sacado <code>${esc(p.sacS || "vacío")}</code> / <code>${esc(p.ctdS || "vacía")}</code>` : ""}</li>`).join("")
     : `<li>Sin problemas en los datos filtrados.</li>`;
 }
 
@@ -850,7 +900,7 @@ function moveTip(e) {
 }
 addEventListener("scroll", hideTip, { passive: true });
 
-// ---------- Barras horizontales fuera + dentro ----------
+// ---------- Barras horizontales apiladas (FEFO se quedó · FEFO sacado · vida útil) ----------
 let CHARTS = [];
 function niceMax(v) {
   const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
@@ -861,12 +911,13 @@ function endBar(x, y, w, h) {
   return `M${x},${y}h${w - r}a${r},${r} 0 0 1 ${r},${r}v${h - 2 * r}a${r},${r} 0 0 1 ${-r},${r}h${-(w - r)}z`;
 }
 function barras(el, rows, vacio) {
-  if (!rows.length || !rows.some(r => r.f + r.d)) { el.innerHTML = `<div class="empty">${esc(vacio)}</div>`; return; }
+  const total = r => r.segs.reduce((a, s) => a + s.v, 0);
+  if (!rows.length || !rows.some(total)) { el.innerHTML = `<div class="empty">${esc(vacio)}</div>`; return; }
   const W = Math.max(300, el.clientWidth);
-  const labelW = Math.round(Math.min(260, W * 0.42)), maxChars = Math.floor((labelW - 10) / 6.4);
-  const rowH = 28, barH = 16, top = 4, bottom = 22, pr = 64;
+  const labelW = Math.round(Math.min(240, W * 0.38)), maxChars = Math.floor((labelW - 10) / 6.4);
+  const rowH = 28, barH = 16, top = 4, bottom = 22, pr = 92;
   const H = top + rows.length * rowH + bottom;
-  const max = niceMax(Math.max(...rows.map(r => r.f + r.d)));
+  const max = niceMax(Math.max(...rows.map(total)));
   const x = v => labelW + v / max * (W - labelW - pr);
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
   for (let i = 0; i <= 4; i++) {
@@ -877,13 +928,16 @@ function barras(el, rows, vacio) {
     const y = top + i * rowH + (rowH - barH) / 2, name = r.label.length > maxChars ? r.label.slice(0, maxChars) + "…" : r.label;
     s += `<text class="lab" x="${labelW - 8}" y="${y + barH / 2 + 4}" text-anchor="end">${esc(name)}</text>`;
     s += `<g class="bar" data-i="${i}"><rect class="hit" x="0" y="${top + i * rowH}" width="${W}" height="${rowH}"/>`;
-    if (r.f && r.d) {
-      s += `<rect x="${x(0)}" y="${y}" width="${Math.max(0, x(r.f) - x(0) - 1)}" height="${barH}" fill="var(--bad)"/>`;
-      s += `<path d="${endBar(x(r.f) + 1, y, Math.max(1, x(r.f + r.d) - x(r.f) - 1), barH)}" fill="var(--good)"/>`;
-    } else if (r.f + r.d) {
-      s += `<path d="${endBar(x(0), y, x(r.f + r.d) - x(0), barH)}" fill="${r.f ? "var(--bad)" : "var(--good)"}"/>`;
-    }
-    s += `</g><text class="val-lab" x="${x(r.f + r.d) + 6}" y="${y + barH / 2 + 4}">${fmt(r.f)} fuera</text>`;
+    const vis = r.segs.filter(sg => sg.v > 0);
+    let acc = 0;
+    vis.forEach((sg, j) => {
+      const x0 = x(acc) + (j ? 1 : 0), x1 = x(acc + sg.v) - (j < vis.length - 1 ? 1 : 0);
+      s += j === vis.length - 1
+        ? `<path d="${endBar(x0, y, Math.max(1, x1 - x0), barH)}" fill="${sg.c}"/>`
+        : `<rect x="${x0}" y="${y}" width="${Math.max(1, x1 - x0)}" height="${barH}" fill="${sg.c}"/>`;
+      acc += sg.v;
+    });
+    s += `</g><text class="val-lab" x="${x(acc) + 6}" y="${y + barH / 2 + 4}">${esc(r.nota)}</text>`;
   });
   s += `<line class="baseline" x1="${x(0)}" x2="${x(0)}" y1="${top}" y2="${H - bottom}"/></svg>`;
   el.innerHTML = s;

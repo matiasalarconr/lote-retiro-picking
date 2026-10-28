@@ -11,6 +11,8 @@ Las celdas con varios lotes (`426/432`) se separan y cada lote toma la cantidad 
 
 ## Uso
 
+Plantilla de carga: [Plantilla_Toma_Inventario.xlsx](Plantilla_Toma_Inventario.xlsx) (hoja "Toma de Inventario" para llenar y hoja "Instrucciones" con ejemplos).
+
 1. **Subir Excel:** el formato "Toma de Inventario Físico por Zonas". El panel busca la fila de encabezados con SKU, Descripción, Lote FEFO, Lote en Picking, Cant, Lote sacado y Ctd, y toma la fecha de la celda junto a **FECHA REALIZADO** (fila 2).
 2. **Filtros:** periodo (todas, última toma, últimos 7 días, mes actual), rango de fechas, estado y búsqueda por SKU o producto.
 3. **Historial de cargas:** cada Excel queda como una toma por fecha; subir la misma fecha la reemplaza. Se puede ver o eliminar cada toma.

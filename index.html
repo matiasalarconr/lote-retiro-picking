@@ -342,6 +342,7 @@ code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color
         <div class="active-f" id="activos"></div>
         <div class="upload" id="upload">
           <label class="btn primary" for="file" tabindex="0">Subir Excel</label>
+          <a class="btn" href="https://github.com/matiasalarconr/lote-retiro-picking/raw/main/Plantilla_Toma_Inventario.xlsx" target="_blank" rel="noopener">Descargar plantilla</a>
           <input id="file" type="file" accept=".xlsx,.xls,.xlsm,.csv" multiple hidden>
           <span class="src" id="src">Sube o arrastra aquí el Excel de cada toma. Cada fecha (fila 2) se suma al historial y queda guardada en este navegador.</span>
           <a class="btn" href="#historial" id="ver-hist">Ver historial</a>
@@ -649,13 +650,14 @@ async function cargarArchivos(files) {
   const src = $("src");
   if (typeof XLSX === "undefined") { src.innerHTML = `<span class="err">No se pudo cargar el lector de Excel. Revisa tu conexión a internet y recarga la página.</span>`; return; }
   if (!PUEDE) return;
-  const nuevas = {}, malos = [];
+  const nuevas = {}, malos = [], vacios = [];
   const quien = USER ? await USER.id() : null;
   for (const f of files) {
     try {
       const wb = XLSX.read(await f.arrayBuffer(), { type: "array", cellDates: true });
-      const hojas = wb.SheetNames.map(n => leerHoja(wb.Sheets[n])).filter(h => h && h.rows.length);
-      if (!hojas.length) { malos.push(f.name); continue; }
+      const leidas = wb.SheetNames.map(n => leerHoja(wb.Sheets[n])).filter(Boolean);
+      const hojas = leidas.filter(h => h.rows.length);
+      if (!hojas.length) { (leidas.length ? vacios : malos).push(f.name); continue; }
       hojas.forEach(h => {
         const fecha = h.meta.fecha || "";
         const t = nuevas[fecha] || (nuevas[fecha] = { rows: [], resp: h.meta.resp || "", archivo: f.name, cargado: new Date().toISOString(), cargadoPor: quien || "", reemplazo: !!TOMAS[fecha] && !TOMAS[fecha].ejemplo });
@@ -664,7 +666,10 @@ async function cargarArchivos(files) {
     } catch { malos.push(f.name); }
   }
   if (!Object.keys(nuevas).length) {
-    src.innerHTML = `<span class="err">No encontré datos en ${malos.map(esc).join(", ")}. El Excel necesita una fila de encabezados con SKU, Lote FEFO y Lote en Picking.</span>`;
+    src.innerHTML = `<span class="err">${[
+      vacios.length ? `${vacios.map(esc).join(", ")} no tiene productos: completa al menos una fila con SKU y Lote FEFO desde la fila 5.` : "",
+      malos.length ? `No encontré datos en ${malos.map(esc).join(", ")}: el Excel necesita una fila de encabezados con SKU, Lote FEFO y Lote en Picking (usa la plantilla).` : ""
+    ].filter(Boolean).join(" ")}</span>`;
     return;
   }
   // Una toma por fecha: subir otra vez la misma fecha reemplaza esa toma
